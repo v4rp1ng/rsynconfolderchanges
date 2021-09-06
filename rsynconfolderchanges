@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# @author v4rp1ng
+# @date 31.08.2021
+
+# This Script catches changes in the source folder and then runs rsync
+# to copy the files to antoher folder. It delets the files in the source folder for cleanup.
+# requirements: fswatch must be installed on the system
+
+
+SOURCE_FOLDER="/sourcefolder/"
+TARGET_FOLDER="/targetfolder/"
+
+
+# check if fswatch is available
+if ! command -v fswatch &> /dev/null
+then
+    echo "fswatch could not be found"
+    exit
+fi
+
+
+# check if source or target folder are missing
+if [ ! -d $SOURCE_FOLDER ] || [ ! -d $TARGET_FOLDER ]
+then
+  echo "SOURCE or TARGET Folder does not exist"
+  exit 1
+fi
+
+# trap control, lets you stop the script with ctrl+c
+function trap_ctrlc ()
+{
+	exit 2
+}
+
+trap "trap_ctrlc" 2
+
+
+while fswatch -1 $SOURCE_FOLDER
+do 
+rsync -az --exclude ".*/" --exclude ".*" --remove-source-files $SOURCE_FOLDER $TARGET_FOLDER
+done
